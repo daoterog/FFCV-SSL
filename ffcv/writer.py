@@ -45,6 +45,10 @@ def handle_sample(sample, dest_ix, field_names, metadata, allocator, fields):
             allocator.set_current_sample(dest_ix)
             # We extract the sample in question from the dataset
             # We write each field individually to the metadata region
+
+            if isinstance(sample, dict):
+                sample = list(sample.values())
+
             for field_name, field, field_value in zip(field_names, fields.values(), sample):
                 destination = metadata[field_name][dest_ix: dest_ix + 1]
                 field.encode(destination, field_value, allocator.malloc)
