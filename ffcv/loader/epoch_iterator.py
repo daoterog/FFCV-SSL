@@ -20,7 +20,7 @@ QUASIRANDOM_ERROR_MSG = '''Not enough memory; try setting quasi-random ordering
 '''
 
 class EpochIterator(Thread):
-    def __init__(self, loader: "Loader", order: Sequence[int]):
+    def __init__(self, loader: "Loader", order: Sequence[int], return_indices: bool):
         super().__init__(daemon=True)
         self.counter = 0
         self.loader: "Loader" = loader
@@ -33,6 +33,7 @@ class EpochIterator(Thread):
         self.output_queue = Queue(self.loader.batches_ahead)
         self.terminate_event = Event()
         self.memory_context = self.loader.memory_manager.schedule_epoch(batches)
+        self.return_indices = return_indices
 
         if IS_CUDA:
             self.current_stream = ch.cuda.current_stream()
@@ -144,6 +145,8 @@ class EpochIterator(Thread):
                     first_stage = False
                     self.memory_context.end_batch(b_ix)
         self.counter += 1
+        if self.return_indices:
+            return batch_indices, tuple(x[: len(batch_indices)] for x in args)
         return tuple(x[: len(batch_indices)] for x in args)
 
     def __next__(self):

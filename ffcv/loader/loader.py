@@ -105,6 +105,7 @@ class Loader:
         batches_ahead: int = 3,
         recompile: bool = False,  # Recompile at every epoch
         custom_field_mapper: int = None,
+        return_indices: bool = False,
     ):
 
         # We store the original user arguments to be able to pass it to the
@@ -140,6 +141,7 @@ class Loader:
         self.distributed: bool = distributed
         self.code_per_stage = None
         self.recompile = recompile
+        self.return_indices = return_indices
 
         if self.num_workers < 1:
             self.num_workers = cpu_count()
@@ -208,7 +210,7 @@ class Loader:
         if self.code_per_stage is None or self.recompile:
             self.generate_code()
 
-        return EpochIterator(self, selected_order)
+        return EpochIterator(self, selected_order, self.return_indices)
 
     def filter(self, field_name: str, condition: Callable[[Any], bool]) -> "Loader":
         new_args = {**self._args}
